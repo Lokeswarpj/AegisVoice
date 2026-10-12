@@ -1,0 +1,32 @@
+version: v1
+environment: production
+
+identity:
+  api_key: ${ARMORIQ_API_KEY}
+  user_id: ${USER_ID}
+  agent_id: ${AGENT_ID}
+
+proxy:
+  url: https://customer-proxy.armoriq.ai
+  timeout: 30
+  max_retries: 3
+
+policy:
+  allow:
+    - it-helpdesk-mcp.verify_employee_identity
+    - it-helpdesk-mcp.reset_user_password
+    - it-helpdesk-mcp.check_ticket_status
+  deny:
+    - it-helpdesk-mcp.grant_admin_privileges
+    - it-helpdesk-mcp.disable_mfa_enforcement
+
+intent:
+  ttl_seconds: 300
+  require_csrg: true
+
+mcp_servers:
+  - id: it-helpdesk-mcp
+    url: http://127.0.0.1:5000/mcp
+    description: Enterprise IT Helpdesk & IAM Admin Tools MCP Server
+    auth:
+      type: none

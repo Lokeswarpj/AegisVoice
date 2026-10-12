@@ -1,0 +1,193 @@
+:root {
+  --yellow: #ffe17c;
+  --charcoal: #171e19;
+  --sage: #b7c6c2;
+  --white: #ffffff;
+  --black: #000000;
+  --gray-dark: #272727;
+  --gray-light: #f4f4f5;
+  --star-yellow: #ffbc2e;
+
+  --font-heading: 'Cabinet Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--charcoal);
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+p, span, div, button, input {
+  font-family: var(--font-body);
+}
+
+/* 32px x 32px radial dot pattern (opacity 10%) on primary yellow */
+.bg-yellow-dots {
+  background-color: var(--yellow);
+  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 2px, transparent 2px);
+  background-size: 32px 32px;
+}
+
+/* Neo-Brutalist Hard Shadows (0 Blur) */
+.shadow-neo-sm {
+  box-shadow: 2px 2px 0px 0px var(--black);
+}
+
+.shadow-neo-md {
+  box-shadow: 4px 4px 0px 0px var(--black);
+}
+
+.shadow-neo-lg {
+  box-shadow: 8px 8px 0px 0px var(--black);
+}
+
+.shadow-neo-xl {
+  box-shadow: 12px 12px 0px 0px var(--black);
+}
+
+/* Neo-Brutalist Border Enforcement */
+.border-neo {
+  border: 2px solid var(--black);
+}
+
+/* Neo-Brutalist Push Buttons */
+.btn-neo-primary {
+  background-color: var(--black);
+  color: var(--white);
+  padding: 0.85rem 1.8rem;
+  border: 2px solid var(--black);
+  border-radius: 0.75rem; /* 12px */
+  box-shadow: 8px 8px 0px 0px var(--black);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-neo-primary:hover {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0px 0px var(--black);
+}
+
+.btn-neo-primary:active {
+  transform: translate(8px, 8px);
+  box-shadow: 0px 0px 0px 0px var(--black);
+}
+
+.btn-neo-secondary {
+  background-color: var(--white);
+  color: var(--black);
+  padding: 0.85rem 1.8rem;
+  border: 2px solid var(--black);
+  border-radius: 0.75rem;
+  box-shadow: 4px 4px 0px 0px var(--black);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-neo-secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--black);
+  background-color: #fafafa;
+}
+
+.btn-neo-secondary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px var(--black);
+}
+
+.btn-neo-yellow {
+  background-color: var(--yellow);
+  color: var(--black);
+  padding: 0.65rem 1.25rem;
+  border: 2px solid var(--black);
+  border-radius: 0.5rem;
+  box-shadow: 4px 4px 0px 0px var(--black);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-neo-yellow:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--black);
+}
+
+/* Headline Stroke Keyword */
+.stroke-keyword {
+  -webkit-text-stroke: 2px var(--black);
+  color: transparent;
+  display: inline-block;
+}
+
+/* Infinite Marquee Animation */
+@keyframes marqueeRoll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeRoll 25s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Asymmetric Testimonial Card */
+.card-asymmetric {
+  border-top-left-radius: 2px;
+  border-top-right-radius: 28px;
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--charcoal);
+  border-left: 2px solid var(--black);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--yellow);
+  border: 2px solid var(--black);
+}
