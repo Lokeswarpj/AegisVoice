@@ -10,6 +10,11 @@
 
 ---
 
+### GitHub Repository
+**[https://github.com/Lokeswarpj/AegisVoice](https://github.com/Lokeswarpj/AegisVoice)**
+
+---
+
 ### Short Description (What you built)
 We built **AegisVoice IT**, an autonomous voice IT-helpdesk agent that employees can speak with to resolve corporate IT issues. The agent utilizes **ElevenLabs** for lifelike conversational speech synthesis and interacts with an enterprise **Model Context Protocol (MCP)** server (`it-helpdesk-mcp`) to perform actions such as employee verification, password resets, and ticket lookups.
 
