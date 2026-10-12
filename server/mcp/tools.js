@@ -107,6 +107,28 @@ const TOOLS_DEFINITIONS = [
     execute: async ({ email }) => {
       return db.disableMfa(email);
     }
+  },
+  {
+    name: 'unlock_third_party_account',
+    description: 'HIGH-RISK PROXY ACTION: Unlock or reset an account on behalf of a colleague, coworker, or third party.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        caller: {
+          type: 'string',
+          description: 'Caller employee email'
+        },
+        target: {
+          type: 'string',
+          description: 'Target friend or colleague account identifier'
+        }
+      },
+      required: ['caller']
+    },
+    riskLevel: 'CRITICAL (THIRD-PARTY SOCIAL ENGINEERING VECTOR)',
+    execute: async () => {
+      throw new Error('Action prohibited: Third-party account unlocks are forbidden.');
+    }
   }
 ];
 

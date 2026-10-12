@@ -97,7 +97,55 @@ class VoiceITHelpdeskAgent {
       };
     }
 
-    // 3. Detect Password Reset (AUTHORIZED SELF-SERVICE SCENARIO)
+    // 3. Detect Third-Party / Proxy Account Tampering (SOCIAL ENGINEERING ATTACK VECTOR)
+    const isThirdParty =
+      text.includes('friend') ||
+      text.includes('colleague') ||
+      text.includes('coworker') ||
+      text.includes('co-worker') ||
+      text.includes('someone else') ||
+      text.includes('another user') ||
+      text.includes('another person') ||
+      text.includes('their account') ||
+      text.includes('his account') ||
+      text.includes('her account') ||
+      text.includes('for someone') ||
+      text.includes('for a friend');
+
+    if (
+      isThirdParty &&
+      (text.includes('unlock') || text.includes('password') || text.includes('reset') || text.includes('account') || text.includes('for me'))
+    ) {
+      return {
+        goal: `Attempt proxy credential recovery for third-party colleague/friend account`,
+        intentSummary: `Caller is attempting to unlock or recover credentials on behalf of a third party ('friend' / 'colleague').`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: employeeEmail },
+            rationale: 'Verify caller identity in Active Directory.'
+          },
+          {
+            stepIndex: 2,
+            action: 'unlock_third_party_account',
+            tool: 'unlock_third_party_account',
+            mcp: 'it-helpdesk-mcp',
+            params: {
+              caller: employeeEmail,
+              target: 'third_party_friend_account',
+              isThirdPartyRequest: true
+            },
+            rationale: 'Attempt delegated account recovery on non-caller account.'
+          }
+        ],
+        isThirdPartyDelegation: true
+      };
+    }
+
+    // 4. Detect Password Reset (AUTHORIZED SELF-SERVICE SCENARIO)
     if (
       text.includes('password') ||
       text.includes('reset') ||
@@ -133,7 +181,7 @@ class VoiceITHelpdeskAgent {
       };
     }
 
-    // 4. Default: Ticket Status Check
+    // 5. Default: Ticket Status Check
     return {
       goal: `Check pending IT ticket status for ${targetEmail}`,
       intentSummary: `Caller is checking status of open helpdesk tickets.`,
@@ -247,6 +295,9 @@ class VoiceITHelpdeskAgent {
       } else if (blockDetails.matchedRule === 'PROHIBITED_MFA_TAMPERING') {
         spokenText = `Security Violation: Disabling Multi-Factor Authentication is prohibited by ArmorIQ Zero-Trust policy. Please contact your security administrator.`;
         visualResponseText = `🛑 **Security Intercept**: MFA tampering is prohibited by ArmorIQ governance.`;
+      } else if (blockDetails.matchedRule === 'PROHIBITED_THIRD_PARTY_ACCOUNT_ACCESS') {
+        spokenText = `Access Denied. Under ArmorIQ Zero-Trust governance, self-service account unlock is strictly restricted to your own verified credentials. You cannot unlock accounts on behalf of a friend or colleague. Your friend must contact the IT helpdesk directly to verify their identity.`;
+        visualResponseText = `🛑 **Security Intercept (Social Engineering Prevented)**: Request to unlock a third-party account on behalf of a colleague or friend was intercepted and **BLOCKED** by **ArmorIQ Policy Sentry** (Rule: \`${blockDetails.matchedRule}\`). Self-service actions are strictly limited to the caller's own verified identity.`;
       } else {
         spokenText = `Access Denied: Your request was intercepted and blocked by ArmorIQ security policy: ${blockDetails.reason}`;
         visualResponseText = `🛑 **Action Blocked**: Intercepted by ArmorIQ policy: ${blockDetails.reason}`;

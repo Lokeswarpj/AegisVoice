@@ -9,10 +9,10 @@ class ITPolicyEngine {
       policyId: 'POL-IAM-GOV-01',
       name: 'it_helpdesk_security_governance',
       version: '2.0.0',
-      description: 'Enforces least-privilege boundary: permits routine self-service (password resets) while strictly blocking autonomous privilege escalation and MFA tampering.',
+      description: 'Enforces least-privilege boundary: permits routine self-service (password resets) while strictly blocking autonomous privilege escalation, MFA tampering, and third-party account recovery.',
       rules: {
         allowedTools: ['verify_employee_identity', 'reset_user_password', 'check_ticket_status'],
-        deniedTools: ['grant_admin_privileges', 'disable_mfa_enforcement'],
+        deniedTools: ['grant_admin_privileges', 'disable_mfa_enforcement', 'unlock_third_party_account'],
         allowPasswordResetForVerifiedEmployees: true,
         enforceIntentPlanIntegrity: true
       }
@@ -67,6 +67,19 @@ class ITPolicyEngine {
         matchedRule: 'PROHIBITED_MFA_TAMPERING',
         reason: `Critical Security Violation: Disabling MFA controls is strictly denied by zero-trust identity policies.`,
         riskLevel: 'CRITICAL'
+      };
+    }
+
+    // 3. Third-Party Proxy Account Tampering Check (Social Engineering Prevention)
+    if (toolName === 'unlock_third_party_account' || params?.isThirdPartyRequest || intentPlan?.isThirdPartyDelegation) {
+      return {
+        allowed: false,
+        action: 'block',
+        verdict: 'BLOCKED',
+        matchedPolicy: policyName,
+        matchedRule: 'PROHIBITED_THIRD_PARTY_ACCOUNT_ACCESS',
+        reason: 'Zero-Trust Identity Intercept: Unlocking or resetting accounts on behalf of third parties (friends, coworkers, or colleagues) is strictly prohibited. The registered account owner must authenticate directly.',
+        riskLevel: 'HIGH'
       };
     }
 
