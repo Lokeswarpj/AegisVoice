@@ -11,6 +11,7 @@ export default function InteractiveBrowserMockup({
 }) {
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [micStatusMessage, setMicStatusMessage] = useState('');
 
   const verdict = latestResult?.verdict || 'READY';
   const isBlocked = verdict === 'BLOCKED';
@@ -18,29 +19,53 @@ export default function InteractiveBrowserMockup({
 
   const toggleRecording = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert('Speech Recognition not supported in this browser. Please type or click the preset buttons.');
+      setMicStatusMessage('Microphone speech recognition unavailable. Simulating employee voice request...');
+      setTimeout(() => {
+        onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+        setMicStatusMessage('');
+      }, 700);
       return;
     }
 
     if (isRecording) {
       setIsRecording(false);
+      setMicStatusMessage('');
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
 
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      setInputText(text);
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setMicStatusMessage('Listening... Speak your IT request clearly');
+      };
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        setInputText(text);
+        setIsRecording(false);
+        setMicStatusMessage('');
+        onSendMessage(text);
+      };
+      recognition.onerror = (e) => {
+        console.warn('Speech recognition warning:', e.error);
+        setIsRecording(false);
+        setMicStatusMessage('Microphone access unavailable. Simulating employee voice request...');
+        setTimeout(() => {
+          onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+          setMicStatusMessage('');
+        }, 700);
+      };
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+      recognition.start();
+    } catch (e) {
       setIsRecording(false);
-      onSendMessage(text);
-    };
-    recognition.onerror = () => setIsRecording(false);
-    recognition.onend = () => setIsRecording(false);
-    recognition.start();
+      onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+    }
   };
 
   const handleFormSubmit = (e) => {
@@ -53,13 +78,15 @@ export default function InteractiveBrowserMockup({
   return (
     <div
       id="interactive-demo"
+      className={isProcessing ? 'neo-pulse' : ''}
       style={{
         backgroundColor: 'var(--white)',
         border: '2px solid var(--black)',
         borderRadius: '1rem', /* 16px */
-        boxShadow: '12px 12px 0px 0px var(--black)',
+        boxShadow: isProcessing ? '12px 12px 0px 0px #2563EB' : '12px 12px 0px 0px var(--black)',
         overflow: 'hidden',
-        width: '100%'
+        width: '100%',
+        transition: 'box-shadow 0.3s ease'
       }}
     >
       {/* Browser Mockup Window Header */}
@@ -83,8 +110,8 @@ export default function InteractiveBrowserMockup({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--yellow)', fontWeight: 700, textTransform: 'uppercase' }}>
-            CSRG-IAP ACTIVE
+          <span style={{ fontSize: '0.68rem', color: isProcessing ? '#60A5FA' : 'var(--yellow)', fontWeight: 700, textTransform: 'uppercase' }}>
+            {isProcessing ? '⚡ INTENT IN-FLIGHT' : 'CSRG-IAP ACTIVE'}
           </span>
         </div>
       </div>
@@ -117,8 +144,20 @@ export default function InteractiveBrowserMockup({
               <div
                 style={{
                   padding: '6px 12px',
-                  backgroundColor: isBlocked ? 'var(--charcoal)' : isAllowed ? 'var(--black)' : 'var(--white)',
-                  color: isBlocked ? '#ff5f57' : isAllowed ? 'var(--yellow)' : 'var(--black)',
+                  backgroundColor: isProcessing
+                    ? 'var(--yellow)'
+                    : isBlocked
+                    ? 'var(--charcoal)'
+                    : isAllowed
+                    ? 'var(--black)'
+                    : 'var(--white)',
+                  color: isProcessing
+                    ? 'var(--black)'
+                    : isBlocked
+                    ? '#ff5f57'
+                    : isAllowed
+                    ? 'var(--yellow)'
+                    : 'var(--black)',
                   border: '2px solid var(--black)',
                   fontWeight: 800,
                   fontSize: '0.85rem',
@@ -127,11 +166,36 @@ export default function InteractiveBrowserMockup({
                   gap: '6px'
                 }}
               >
-                {isBlocked ? <AlertOctagon size={16} color="#ff5f57" /> : isAllowed ? <CheckCircle2 size={16} color="var(--yellow)" /> : <Shield size={16} />}
-                <span>{isBlocked ? 'ACTION BLOCKED (403)' : isAllowed ? 'ACTION ALLOWED (200)' : 'READY'}</span>
+                {isProcessing ? (
+                  <>
+                    <Activity size={16} className="animate-spin" />
+                    <span>VERIFYING INTENT...</span>
+                  </>
+                ) : isBlocked ? (
+                  <>
+                    <AlertOctagon size={16} color="#ff5f57" />
+                    <span>ACTION BLOCKED (403)</span>
+                  </>
+                ) : isAllowed ? (
+                  <>
+                    <CheckCircle2 size={16} color="var(--yellow)" />
+                    <span>ACTION ALLOWED (200)</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield size={16} />
+                    <span>READY</span>
+                  </>
+                )}
               </div>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--charcoal)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {isBlocked ? latestResult.blockDetails?.matchedRule : isAllowed ? 'Self-Service Action Verified' : 'Awaiting Voice Request'}
+                {isProcessing
+                  ? 'Cryptographic proof verification...'
+                  : isBlocked
+                  ? latestResult.blockDetails?.matchedRule
+                  : isAllowed
+                  ? 'Self-Service Action Verified'
+                  : 'Awaiting Voice Request'}
               </div>
             </div>
           </div>
@@ -150,12 +214,14 @@ export default function InteractiveBrowserMockup({
               <span style={{ fontSize: '0.72rem', color: 'var(--sage)', fontWeight: 800, textTransform: 'uppercase' }}>
                 INTENT TOKEN SIGNATURE
               </span>
-              <span style={{ fontSize: '0.68rem', color: 'var(--yellow)', fontFamily: 'var(--font-mono)' }}>
+              <span style={{ fontSize: '0.68rem', color: isProcessing ? '#60A5FA' : 'var(--yellow)', fontFamily: 'var(--font-mono)' }}>
                 Ed25519
               </span>
             </div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {latestResult?.intentToken?.tokenId || 'tok_iap_waiting_for_call'}
+              {isProcessing
+                ? 'tok_minting_merkle_proof...'
+                : latestResult?.intentToken?.tokenId || 'tok_iap_waiting_for_call'}
             </div>
             <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
               MCP Target: <strong>it-helpdesk-mcp</strong>
@@ -183,7 +249,7 @@ export default function InteractiveBrowserMockup({
                 padding: '12px',
                 textAlign: 'left',
                 boxShadow: '4px 4px 0px 0px var(--black)',
-                cursor: 'pointer',
+                cursor: isProcessing ? 'wait' : 'pointer',
                 transition: 'all 0.15s ease'
               }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px 0px var(--black)'; }}
@@ -207,7 +273,7 @@ export default function InteractiveBrowserMockup({
                 padding: '12px',
                 textAlign: 'left',
                 boxShadow: '4px 4px 0px 0px var(--black)',
-                cursor: 'pointer',
+                cursor: isProcessing ? 'wait' : 'pointer',
                 transition: 'all 0.15s ease'
               }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px 0px var(--black)'; }}
@@ -237,48 +303,89 @@ export default function InteractiveBrowserMockup({
           }}
         >
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--charcoal)' }}>
                 Agent Spoken Response (ElevenLabs Turbo v2.5):
               </span>
               {isSpeaking && (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Volume2 size={14} /> Speaking...
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', height: '16px' }}>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#2563EB', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Volume2 size={14} /> Voice Active
+                  </span>
+                </div>
               )}
             </div>
 
             <div style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--charcoal)', lineHeight: 1.45 }}>
-              {latestResult?.spokenText || 'Ready for prompt. Click either scenario above to observe live verification.'}
+              {isProcessing ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E40AF', fontWeight: 600 }}>
+                  <Activity size={16} className="animate-spin" />
+                  <span>Processing voice input: ArmorIQ runtime policy engine is validating permissions against it-helpdesk-mcp...</span>
+                </div>
+              ) : (
+                latestResult?.spokenText || 'Ready for prompt. Click either scenario above or "Test Voice Agent Live" to observe live verification.'
+              )}
             </div>
           </div>
 
           {latestResult?.spokenText && (
-            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 onClick={() => onPlayAudio(latestResult.spokenText, latestResult.ttsAudio)}
                 style={{
-                  backgroundColor: 'var(--black)',
+                  backgroundColor: isSpeaking ? '#2563EB' : 'var(--black)',
                   color: 'var(--white)',
                   border: '2px solid var(--black)',
-                  padding: '4px 10px',
+                  padding: '5px 12px',
                   borderRadius: '6px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  cursor: 'pointer'
+                  gap: '6px',
+                  cursor: 'pointer',
+                  boxShadow: '2px 2px 0px 0px var(--black)',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Play size={10} fill="var(--white)" /> Replay Audio
+                <Volume2 size={13} fill="var(--white)" />
+                <span>{isSpeaking ? 'Playing Voice...' : '🔊 Listen / Replay Voice'}</span>
               </button>
-              <span style={{ fontSize: '0.68rem', color: 'rgba(0,0,0,0.5)' }}>
-                Executed on: <strong>it-helpdesk-mcp</strong>
+              <span style={{ fontSize: '0.68rem', color: 'rgba(0,0,0,0.6)' }}>
+                Target: <strong>it-helpdesk-mcp</strong> • Ed25519 Verified
               </span>
             </div>
           )}
         </div>
+
+        {/* Microphone status alert message if active or blocked */}
+        {micStatusMessage && (
+          <div
+            style={{
+              backgroundColor: 'var(--yellow)',
+              border: '2px solid var(--black)',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              boxShadow: '2px 2px 0px 0px var(--black)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              width: 'fit-content'
+            }}
+          >
+            <Mic size={14} />
+            <span>{micStatusMessage}</span>
+          </div>
+        )}
 
         {/* Push-to-Talk Mic Bar */}
         <form onSubmit={handleFormSubmit} style={{ display: 'flex', gap: '8px' }}>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, ShieldCheck, Zap } from 'lucide-react';
 
-export default function FinalCTA() {
+export default function FinalCTA({ onSendMessage, isProcessing }) {
   return (
     <section
       style={{
@@ -60,14 +60,21 @@ export default function FinalCTA() {
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a
-            href="#interactive-demo"
+          <button
+            onClick={() => {
+              const demo = document.getElementById('interactive-demo');
+              if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              if (onSendMessage) {
+                onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+              }
+            }}
+            disabled={isProcessing}
             className="btn-neo-primary"
-            style={{ fontSize: '1.05rem', padding: '1rem 2.2rem' }}
+            style={{ fontSize: '1.05rem', padding: '1rem 2.2rem', cursor: isProcessing ? 'wait' : 'pointer' }}
           >
-            <span>Launch Live Interactive Demo</span>
+            <span>{isProcessing ? 'Verifying with ArmorIQ...' : 'Launch Live Interactive Demo'}</span>
             <ArrowRight size={18} />
-          </a>
+          </button>
 
           <a
             href="https://platform.armoriq.ai"

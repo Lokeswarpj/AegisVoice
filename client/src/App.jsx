@@ -44,46 +44,105 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Audio Unlocker for browser autoplay policies
+  const unlockAudio = () => {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.debug('Audio unlock bypassed:', e);
+    }
+  };
+
+  // Browser Web Speech Synthesis with Chromium GC protection
+  const speakBrowserVoice = (text) => {
+    if (!('speechSynthesis' in window) || !text) {
+      setIsSpeaking(false);
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Retain reference on window to prevent V8 garbage collection during speech
+        window._activeSpeechUtterance = utterance;
+        utterance.rate = 1.02;
+        utterance.pitch = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') || v.name.includes('Jenny') || v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Guy'))
+        ) || voices.find(v => v.lang.startsWith('en'));
+
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => {
+          setIsSpeaking(false);
+          window._activeSpeechUtterance = null;
+        };
+        utterance.onerror = (e) => {
+          console.warn('Speech synthesis utterance error:', e);
+          setIsSpeaking(false);
+          window._activeSpeechUtterance = null;
+        };
+
+        window.speechSynthesis.speak(utterance);
+        setIsSpeaking(true);
+      }, 60);
+    } catch (err) {
+      console.warn('Speech synthesis failed:', err);
+      setIsSpeaking(false);
+    }
+  };
+
   // Voice Audio Playback: ElevenLabs Base64 MP3 or Browser Web Speech
   const playAudio = (spokenText, ttsAudio) => {
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current = null;
     }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
 
     if (ttsAudio && ttsAudio.success && ttsAudio.audioBase64) {
       // ElevenLabs Base64 audio
-      const audio = new Audio(`data:audio/mpeg;base64,${ttsAudio.audioBase64}`);
-      currentAudioRef.current = audio;
-      setIsSpeaking(true);
+      try {
+        const audio = new Audio(`data:audio/mpeg;base64,${ttsAudio.audioBase64}`);
+        currentAudioRef.current = audio;
+        setIsSpeaking(true);
 
-      audio.onended = () => {
-        setIsSpeaking(false);
-        currentAudioRef.current = null;
-      };
-      audio.onerror = () => {
-        setIsSpeaking(false);
-        currentAudioRef.current = null;
-      };
+        audio.onended = () => {
+          setIsSpeaking(false);
+          currentAudioRef.current = null;
+        };
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          currentAudioRef.current = null;
+          if (spokenText) speakBrowserVoice(spokenText);
+        };
 
-      audio.play().catch(e => {
-        console.warn('Audio play autoplay error:', e);
-        setIsSpeaking(false);
-      });
-    } else if ('speechSynthesis' in window && spokenText) {
-      // Web Speech API fallback
-      const utterance = new SpeechSynthesisUtterance(spokenText);
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-
-      setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-
-      window.speechSynthesis.speak(utterance);
+        audio.play().catch(e => {
+          console.warn('Audio play autoplay restricted, falling back to speech synthesis:', e);
+          setIsSpeaking(false);
+          if (spokenText) speakBrowserVoice(spokenText);
+        });
+      } catch (err) {
+        if (spokenText) speakBrowserVoice(spokenText);
+      }
+    } else if (spokenText) {
+      speakBrowserVoice(spokenText);
     }
   };
 
@@ -91,6 +150,7 @@ export default function App() {
   const handleSendMessage = async (text) => {
     if (!text || isProcessing) return;
 
+    unlockAudio();
     setIsProcessing(true);
 
     try {
@@ -143,6 +203,7 @@ export default function App() {
       <NeoNavbar
         onOpenSettings={() => setIsSettingsOpen(true)}
         status={status}
+        onSendMessage={handleSendMessage}
       />
 
       {/* 2. Hero Section with Browser Mockup */}
@@ -174,7 +235,7 @@ export default function App() {
       <Testimonials />
 
       {/* 9. Final CTA */}
-      <FinalCTA />
+      <FinalCTA onSendMessage={handleSendMessage} isProcessing={isProcessing} />
 
       {/* 10. Footer */}
       <NeoFooter />

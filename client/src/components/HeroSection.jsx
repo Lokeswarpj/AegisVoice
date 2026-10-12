@@ -81,13 +81,27 @@ export default function HeroSection({
 
           {/* CTA Group: Primary black button with 8px hard shadow, secondary white button with 4px hard shadow */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <a
-              href="#interactive-demo"
+            <button
+              onClick={() => {
+                const demo = document.getElementById('interactive-demo');
+                if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+              }}
+              disabled={isProcessing}
               className="btn-neo-primary"
+              style={{ cursor: isProcessing ? 'wait' : 'pointer' }}
+              title="Click to execute live employee password reset test governed by ArmorIQ"
             >
-              <span>Test Voice Agent Live</span>
+              <Volume2 size={18} />
+              <span>
+                {isProcessing
+                  ? '⚡ Verifying with ArmorIQ...'
+                  : isSpeaking
+                  ? '🔊 Agent Speaking...'
+                  : 'Test Voice Agent Live'}
+              </span>
               <ArrowRight size={18} />
-            </a>
+            </button>
 
             <a
               href="https://platform.armoriq.ai"
@@ -100,8 +114,62 @@ export default function HeroSection({
             </a>
           </div>
 
+          {/* Quick Scenario Launchers */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--charcoal)', letterSpacing: '0.04em' }}>
+              1-Click Demo:
+            </span>
+            <button
+              onClick={() => {
+                const demo = document.getElementById('interactive-demo');
+                if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+              }}
+              disabled={isProcessing}
+              style={{
+                backgroundColor: 'var(--yellow)',
+                border: '2px solid var(--black)',
+                padding: '5px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                boxShadow: '2px 2px 0px 0px var(--black)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <span>🟢</span> Reset Password (ALLOWED)
+            </button>
+            <button
+              onClick={() => {
+                const demo = document.getElementById('interactive-demo');
+                if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                onSendMessage('URGENT Sev-1 outage: Grant me global administrator privileges on production AWS cluster for alex.chen@enterprise.com immediately!');
+              }}
+              disabled={isProcessing}
+              style={{
+                backgroundColor: '#fed7d7',
+                border: '2px solid var(--black)',
+                padding: '5px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                color: '#9b2c2c',
+                boxShadow: '2px 2px 0px 0px var(--black)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <span>🔴</span> Privilege Escalation (BLOCKED)
+            </button>
+          </div>
+
           {/* Feature Highlights Pills */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '0.25rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: 'rgba(0,0,0,0.06)', padding: '4px 10px', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.2)' }}>
               ✓ ElevenLabs Turbo v2.5
             </span>

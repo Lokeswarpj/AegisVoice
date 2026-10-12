@@ -1,7 +1,7 @@
 import React from 'react';
 import { Zap, Shield, Key, ExternalLink } from 'lucide-react';
 
-export default function NeoNavbar({ onOpenSettings, status }) {
+export default function NeoNavbar({ onOpenSettings, status, onSendMessage }) {
   return (
     <header
       style={{
@@ -116,13 +116,19 @@ export default function NeoNavbar({ onOpenSettings, status }) {
           <Key size={16} color="var(--black)" />
         </button>
 
-        <a
-          href="#interactive-demo"
+        <button
+          onClick={() => {
+            const demo = document.getElementById('interactive-demo');
+            if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (onSendMessage) {
+              onSendMessage('Hi, I got locked out of my corporate email. Can you reset my temporary password for user alex.chen@enterprise.com?');
+            }
+          }}
           className="btn-neo-primary"
-          style={{ padding: '0.65rem 1.4rem', fontSize: '0.88rem', textDecoration: 'none' }}
+          style={{ padding: '0.65rem 1.4rem', fontSize: '0.88rem', cursor: 'pointer' }}
         >
           Start Free Trial
-        </a>
+        </button>
       </div>
     </header>
   );
