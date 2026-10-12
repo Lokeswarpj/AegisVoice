@@ -64,7 +64,26 @@ class MockITDatabase {
 
   getEmployee(email) {
     if (!email) return null;
-    return this.employees.find(e => e.email.toLowerCase() === email.toLowerCase()) || null;
+    let emp = this.employees.find(e => e.email.toLowerCase() === email.toLowerCase());
+    if (!emp) {
+      // Dynamically provision employee record for demo callers
+      const nameParts = email.split('@')[0].split(/[._-]/);
+      const formattedName = nameParts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+      emp = {
+        id: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+        email: email.toLowerCase(),
+        name: formattedName || email,
+        department: 'Engineering & Operations',
+        role: 'team_member',
+        mfaEnabled: true,
+        accountLocked: false,
+        lastPasswordReset: new Date().toISOString(),
+        adminPrivileges: false,
+        assignedSystems: ['internal-portal', 'slack']
+      };
+      this.employees.push(emp);
+    }
+    return emp;
   }
 
   getEmployees() {

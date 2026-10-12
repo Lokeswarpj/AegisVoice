@@ -240,9 +240,10 @@ class VoiceITHelpdeskAgent {
     let visualResponseText = '';
 
     if (finalVerdict === 'BLOCKED') {
+      const requestedRole = blockDetails?.obligations?.[0]?.elevatedRole || plan.targetRole || 'global administrator';
       if (blockDetails.matchedRule === 'PROHIBITED_PRIVILEGE_ESCALATION') {
-        spokenText = `Access Denied. Your request to escalate permissions to global administrator was intercepted and blocked by ArmorIQ Runtime Governance. Autonomous privilege elevation is restricted by enterprise policy and requires Change Advisory Board approval. This attempt has been logged to the SOC audit trail.`;
-        visualResponseText = `🛑 **Security Intercept (Privilege Escalation Blocked)**: Request to grant \`${blockDetails.obligations?.[0]?.elevatedRole || 'administrator'}\` privileges was intercepted and **BLOCKED** by **ArmorIQ Policy Sentry** (Rule: \`${blockDetails.matchedRule}\`). Multi-party CAB approval required. Incident recorded to SOC trail.`;
+        spokenText = `Access Denied. Your request to escalate permissions to ${requestedRole} was intercepted and blocked by ArmorIQ Runtime Governance. Autonomous privilege elevation is restricted by enterprise policy and requires Change Advisory Board approval. This attempt has been logged to the SOC audit trail.`;
+        visualResponseText = `🛑 **Security Intercept (Privilege Escalation Blocked)**: Request to grant \`${requestedRole}\` privileges was intercepted and **BLOCKED** by **ArmorIQ Policy Sentry** (Rule: \`${blockDetails.matchedRule}\`). Multi-party CAB approval required. Incident recorded to SOC trail.`;
       } else if (blockDetails.matchedRule === 'PROHIBITED_MFA_TAMPERING') {
         spokenText = `Security Violation: Disabling Multi-Factor Authentication is prohibited by ArmorIQ Zero-Trust policy. Please contact your security administrator.`;
         visualResponseText = `🛑 **Security Intercept**: MFA tampering is prohibited by ArmorIQ governance.`;
@@ -257,8 +258,9 @@ class VoiceITHelpdeskAgent {
 
       if (resetStep && resetStep.toolResult?.tempToken) {
         const token = resetStep.toolResult.tempToken;
-        spokenText = `Identity verified for Alex Chen. I have unlocked your account and issued temporary password token ${token}. It is valid for fifteen minutes and has been dispatched to your encrypted corporate recovery channel.`;
-        visualResponseText = `✅ **Password Reset Approved & Issued**: Employee verified. Account unlocked. Temporary token: \`${token}\` issued. This action complied with least-privilege boundary and was approved by **ArmorIQ Intent Governance**.`;
+        const empName = resetStep.toolResult.name || verifyStep?.toolResult?.name || 'the employee';
+        spokenText = `Identity verified for ${empName}. I have unlocked your account and issued temporary password token ${token}. It is valid for fifteen minutes and has been dispatched to your encrypted corporate recovery channel.`;
+        visualResponseText = `✅ **Password Reset Approved & Issued**: Employee ${empName} verified. Account unlocked. Temporary token: \`${token}\` issued. This action complied with least-privilege boundary and was approved by **ArmorIQ Intent Governance**.`;
       } else if (ticketStep && ticketStep.toolResult?.found) {
         const t = ticketStep.toolResult.tickets[0];
         spokenText = `You have an active ticket, number ${t.ticketId}, regarding account lock out. Status is currently ${t.status}.`;
