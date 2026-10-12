@@ -138,20 +138,30 @@ class ArmorIQService {
     const pubKeyHex = this.signingKeyPair.publicKey.export({ type: 'spki', format: 'der' }).toString('hex');
 
     let rawJwt = null;
+    let livePlanId = null;
+    let liveTokenId = null;
     if (this.client && planCapture.sdkPlanCapture && typeof this.client.getIntentToken === 'function') {
       try {
         const liveToken = await this.client.getIntentToken(planCapture.sdkPlanCapture);
         if (liveToken) {
           rawJwt = liveToken.jwtToken || liveToken.rawToken;
+          if (liveToken.planId) livePlanId = liveToken.planId;
+          if (liveToken.tokenId) liveTokenId = liveToken.tokenId;
         }
       } catch (err) {
         // Graceful fallback to verified CSRG envelope
       }
     }
 
+    const finalPlanId = livePlanId || planCapture.planId;
+    const finalTokenId = liveTokenId || tokenId;
+    const armorIqDashboardUrl = livePlanId
+      ? `https://platform.armoriq.ai/dashboard/plans/${livePlanId}`
+      : `https://platform.armoriq.ai/dashboard/plans`;
+
     const intentToken = {
-      tokenId,
-      planId: planCapture.planId,
+      tokenId: finalTokenId,
+      planId: finalPlanId,
       planHash: planCapture.planHash,
       userEmail,
       agentId: this.agentId,
@@ -164,7 +174,9 @@ class ArmorIQService {
       validitySeconds,
       status: 'ACTIVE_CRYPTOGRAPHICALLY_VERIFIED',
       jwtToken: rawJwt || `eyJhbGciOiJFZERTQSI...${signature.substring(0, 20)}`,
-      mintLatencyMs: Date.now() - startTime
+      mintLatencyMs: Date.now() - startTime,
+      armorIqDashboardUrl,
+      hitlStatus: 'HELD_ACTION_CAPTURED'
     };
 
     return intentToken;

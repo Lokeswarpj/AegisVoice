@@ -22,9 +22,31 @@ export default function SecurityControlPlane({ latestResult, auditLogs, policies
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Organization:</span>
-          <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#E2E8F0' }}>Lokeswar PJ's Workspace</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Organization:</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#E2E8F0' }}>Lokeswar PJ's Workspace</span>
+          </div>
+          <a
+            href={latestResult?.armorIqDashboardUrl || 'https://platform.armoriq.ai/dashboard/plans'}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              background: 'rgba(139, 92, 246, 0.25)',
+              border: '1px solid rgba(139, 92, 246, 0.5)',
+              color: '#DDD6FE',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>Control Plane ↗</span>
+          </a>
         </div>
       </div>
 
@@ -140,6 +162,25 @@ export default function SecurityControlPlane({ latestResult, auditLogs, policies
                 <span className="mono-tag" style={{ color: '#38BDF8' }}>
                   {latestResult?.intentToken?.mcpTarget || 'it-helpdesk-mcp'}
                 </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>HITL Status</span>
+                <span className="mono-tag" style={{ color: isBlocked ? '#FCA5A5' : isAllowed ? '#6EE7B7' : '#C4B5FD', fontWeight: 700 }}>
+                  {latestResult?.hitlStatus || (isBlocked ? 'POLICY_BLOCKED' : isAllowed ? 'HELD_ACTION_NEEDS_REVIEW' : 'AWAITING_CALL')}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>Control Plane Trace</span>
+                <a
+                  href={latestResult?.armorIqDashboardUrl || 'https://platform.armoriq.ai/dashboard/plans'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#38BDF8', fontSize: '0.72rem', textDecoration: 'underline', fontWeight: 600 }}
+                >
+                  Open Plan in ArmorIQ ↗
+                </a>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>

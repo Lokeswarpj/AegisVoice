@@ -500,16 +500,25 @@ class VoiceITHelpdeskAgent {
     // 6. Generate Lifelike Audio Speech with ElevenLabs
     const ttsResult = await elevenLabsService.synthesizeSpeech(spokenText);
 
+    const armorIqDashboardUrl = intentToken?.armorIqDashboardUrl || 'https://platform.armoriq.ai/dashboard/plans';
+    const hitlStatus = finalVerdict === 'BLOCKED' ? 'POLICY_BLOCKED' : 'HELD_ACTION_NEEDS_REVIEW';
+
     return {
       spokenText,
       visualResponseText,
       verdict: finalVerdict,
       reasoningGoal: plan.goal,
       intentSummary: plan.intentSummary,
-      planCapture,
+      planCapture: {
+        ...planCapture,
+        planId: intentToken?.planId || planCapture.planId,
+        armorIqDashboardUrl
+      },
       intentToken,
       executedSteps,
       blockDetails,
+      hitlStatus,
+      armorIqDashboardUrl,
       ttsAudio: ttsResult,
       totalDurationMs: Date.now() - startTime
     };
