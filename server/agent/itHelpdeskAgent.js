@@ -154,6 +154,7 @@ class VoiceITHelpdeskAgent {
       text.includes('forgot')
     ) {
       return {
+        category: 'PASSWORD_RESET',
         goal: `Verify employee and issue temporary password reset token for ${targetEmail}`,
         intentSummary: `Routine IT helpdesk self-service: Issue temporary reset token for locked/expired account.`,
         steps: [
@@ -181,10 +182,177 @@ class VoiceITHelpdeskAgent {
       };
     }
 
-    // 5. Default: Ticket Status Check
+    // 5. Detect Greetings, Capabilities & Help
+    if (
+      text.includes('hello') ||
+      text.includes('hi ') ||
+      text === 'hi' ||
+      text.includes('hey') ||
+      text.includes('who are you') ||
+      text.includes('what can you do') ||
+      text.includes('what are you') ||
+      text.includes('introduce') ||
+      text.includes('help me') ||
+      text.includes('good morning') ||
+      text.includes('good afternoon')
+    ) {
+      return {
+        category: 'GREETING',
+        goal: `Introduce AegisVoice IT Helpdesk capabilities and verify caller identity for ${targetEmail}`,
+        intentSummary: `Caller is asking for helpdesk orientation and capabilities.`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Confirm caller Active Directory record and department.'
+          }
+        ],
+        isPrivilegeEscalation: false
+      };
+    }
+
+    // 6. Detect VPN & Corporate Network Troubleshooting
+    if (
+      text.includes('vpn') ||
+      text.includes('wifi') ||
+      text.includes('wi-fi') ||
+      text.includes('internet') ||
+      text.includes('network') ||
+      text.includes('connectivity') ||
+      text.includes('globalprotect') ||
+      text.includes('dns') ||
+      text.includes('offline')
+    ) {
+      return {
+        category: 'VPN_NETWORK',
+        goal: `Troubleshoot VPN and corporate network connectivity for ${targetEmail}`,
+        intentSummary: `Caller reported network/VPN connectivity issues.`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Verify caller identity and assigned network access profiles.'
+          },
+          {
+            stepIndex: 2,
+            action: 'check_ticket_status',
+            tool: 'check_ticket_status',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Check for existing network outage tickets or incident records.'
+          }
+        ],
+        isPrivilegeEscalation: false
+      };
+    }
+
+    // 7. Detect Software & Application Requests
+    if (
+      text.includes('software') ||
+      text.includes('install') ||
+      text.includes('slack') ||
+      text.includes('zoom') ||
+      text.includes('jira') ||
+      text.includes('github') ||
+      text.includes('application') ||
+      text.includes('hubspot') ||
+      text.includes('app access') ||
+      text.includes('tool access')
+    ) {
+      return {
+        category: 'SOFTWARE',
+        goal: `Process software and application access query for ${targetEmail}`,
+        intentSummary: `Caller is inquiring about desktop software or tool provisioning.`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Verify caller Active Directory assigned systems and role.'
+          }
+        ],
+        isPrivilegeEscalation: false
+      };
+    }
+
+    // 8. Detect Security Architecture & ArmorIQ Governance Questions
+    if (
+      text.includes('armoriq') ||
+      text.includes('armor iq') ||
+      text.includes('security') ||
+      text.includes('governance') ||
+      text.includes('policy') ||
+      text.includes('sentry') ||
+      text.includes('token') ||
+      text.includes('ed25519') ||
+      text.includes('safe') ||
+      text.includes('zero trust')
+    ) {
+      return {
+        category: 'SECURITY',
+        goal: `Explain ArmorIQ runtime intent governance and security architecture to ${targetEmail}`,
+        intentSummary: `Caller is asking about how AegisVoice is secured and governed by ArmorIQ.`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Verify caller clearance.'
+          }
+        ],
+        isPrivilegeEscalation: false
+      };
+    }
+
+    // 9. Detect Ticket Status Check
+    if (
+      text.includes('ticket') ||
+      text.includes('status') ||
+      text.includes('incident') ||
+      text.includes('case') ||
+      text.includes('sla')
+    ) {
+      return {
+        category: 'TICKET',
+        goal: `Check pending IT ticket status for ${targetEmail}`,
+        intentSummary: `Caller is checking status of open helpdesk tickets.`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Verify caller record.'
+          },
+          {
+            stepIndex: 2,
+            action: 'check_ticket_status',
+            tool: 'check_ticket_status',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: targetEmail },
+            rationale: 'Retrieve open tickets and SLA timer.'
+          }
+        ],
+        isPrivilegeEscalation: false
+      };
+    }
+
+    // 10. General / Open Conversational Query
     return {
-      goal: `Check pending IT ticket status for ${targetEmail}`,
-      intentSummary: `Caller is checking status of open helpdesk tickets.`,
+      category: 'GENERAL',
+      goal: `Address caller IT inquiry: "${userPrompt.substring(0, 80)}" for ${targetEmail}`,
+      intentSummary: `Caller submitted general IT inquiry: "${userPrompt.substring(0, 100)}"`,
       steps: [
         {
           stepIndex: 1,
@@ -192,15 +360,7 @@ class VoiceITHelpdeskAgent {
           tool: 'verify_employee_identity',
           mcp: 'it-helpdesk-mcp',
           params: { email: targetEmail },
-          rationale: 'Verify caller record.'
-        },
-        {
-          stepIndex: 2,
-          action: 'check_ticket_status',
-          tool: 'check_ticket_status',
-          mcp: 'it-helpdesk-mcp',
-          params: { email: targetEmail },
-          rationale: 'Retrieve open tickets and SLA timer.'
+          rationale: 'Confirm caller standing and directory profile.'
         }
       ],
       isPrivilegeEscalation: false
@@ -283,7 +443,7 @@ class VoiceITHelpdeskAgent {
       }
     }
 
-    // 5. Construct Spoken Response
+    // 5. Construct Contextual Spoken Response
     let spokenText = '';
     let visualResponseText = '';
 
@@ -307,21 +467,33 @@ class VoiceITHelpdeskAgent {
       const ticketStep = executedSteps.find(s => s.action === 'check_ticket_status');
       const verifyStep = executedSteps.find(s => s.action === 'verify_employee_identity');
 
-      if (resetStep && resetStep.toolResult?.tempToken) {
+      const empName = verifyStep?.toolResult?.name || resetStep?.toolResult?.name || 'the employee';
+      const dept = verifyStep?.toolResult?.department || 'Operations';
+
+      if (plan.category === 'GREETING') {
+        spokenText = `Hello ${empName}! I am AegisVoice, your enterprise IT helpdesk voice assistant governed by ArmorIQ. I can securely reset temporary passwords, troubleshoot VPN and network connections, check open IT tickets, or guide you through self-service software access. How can I assist you today?`;
+        visualResponseText = `👋 **AegisVoice IT Helpdesk**: Verified caller **${empName}** (${dept}). Available for self-service password recovery, VPN diagnostics, and IT tickets under ArmorIQ runtime governance.`;
+      } else if (plan.category === 'VPN_NETWORK') {
+        spokenText = `Hello ${empName}. For corporate VPN connectivity, please verify GlobalProtect is active and authenticate through Duo MFA. If you're still unable to connect, restart your network adapter or flush your DNS cache. Your employee standing is confirmed in Active Directory.`;
+        visualResponseText = `🌐 **VPN & Network Support**: Verified **${empName}** (${dept}). Reconnect via GlobalProtect 6.2 with Duo MFA. If connectivity fails, submit a network incident ticket.`;
+      } else if (plan.category === 'SOFTWARE') {
+        spokenText = `Hello ${empName}. Standard enterprise tools like Slack, Zoom, and Jira can be requested through your Okta applications portal. For privileged or cloud access, requests must be submitted through Change Advisory Board approval governed by ArmorIQ.`;
+        visualResponseText = `📦 **Software Provisioning**: Verified **${empName}** (${dept}). Standard tools available in Okta Self-Service. Privileged environments require ArmorIQ governance approval.`;
+      } else if (plan.category === 'SECURITY') {
+        spokenText = `AegisVoice is governed at runtime by ArmorIQ. Every voice request captures an execution plan, mints an Ed25519 cryptographically signed Intent Token, and enforces least-privilege security policies to stop unauthorized actions before execution.`;
+        visualResponseText = `🛡️ **ArmorIQ Security Governance**: Runtime Intent Sentry active. Ed25519 cryptographic tokens enforce zero-trust boundaries across MCP tools.`;
+      } else if (plan.category === 'PASSWORD_RESET' && resetStep && resetStep.toolResult?.tempToken) {
         const token = resetStep.toolResult.tempToken;
-        const empName = resetStep.toolResult.name || verifyStep?.toolResult?.name || 'the employee';
         spokenText = `Identity verified for ${empName}. I have unlocked your account and issued temporary password token ${token}. It is valid for fifteen minutes and has been dispatched to your encrypted corporate recovery channel.`;
-        visualResponseText = `✅ **Password Reset Approved & Issued**: Employee ${empName} verified. Account unlocked. Temporary token: \`${token}\` issued. This action complied with least-privilege boundary and was approved by **ArmorIQ Intent Governance**.`;
-      } else if (ticketStep && ticketStep.toolResult?.found) {
+        visualResponseText = `✅ **Password Reset Approved & Issued**: Employee **${empName}** verified. Account unlocked. Temporary token: \`${token}\` issued. This action complied with least-privilege boundary and was approved by **ArmorIQ Intent Governance**.`;
+      } else if (plan.category === 'TICKET' && ticketStep && ticketStep.toolResult?.found) {
         const t = ticketStep.toolResult.tickets[0];
-        spokenText = `You have an active ticket, number ${t.ticketId}, regarding account lock out. Status is currently ${t.status}.`;
+        spokenText = `You have an active ticket, number ${t.ticketId}, regarding ${t.title}. Status is currently ${t.status}.`;
         visualResponseText = `📋 **Ticket Status**: Ticket \`${t.ticketId}\` (${t.title}) is **${t.status}**.`;
-      } else if (verifyStep && verifyStep.toolResult?.verified) {
-        spokenText = `Identity verified for ${verifyStep.toolResult.name} in ${verifyStep.toolResult.department}. How can I assist with your IT services?`;
-        visualResponseText = `✅ **Identity Verified**: ${verifyStep.toolResult.name} (${verifyStep.toolResult.department}).`;
       } else {
-        spokenText = `Your request was processed within approved IT helpdesk policies.`;
-        visualResponseText = `Request verified and completed.`;
+        // Dynamic contextual response for general spoken words
+        spokenText = `Hello ${empName}. I processed your inquiry regarding "${userSpokenText}". As your IT helpdesk agent governed by ArmorIQ, I have verified your identity in ${dept}. You can ask me to reset your password, check tickets, or guide you through IT support.`;
+        visualResponseText = `💬 **IT Support Response**: Verified **${empName}** (${dept}). Processed query: *"${userSpokenText}"*. Active Directory standing confirmed.`;
       }
     }
 
