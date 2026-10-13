@@ -21,14 +21,15 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentAudioRef = useRef(null);
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
   // Fetch telemetry & ArmorIQ status
   const fetchTelemetry = async () => {
     try {
       const [resStatus, resPolicies, resLogs] = await Promise.all([
-        fetch('http://localhost:5000/api/status').then(r => r.json()),
-        fetch('http://localhost:5000/api/policies').then(r => r.json()),
-        fetch('http://localhost:5000/api/audit-logs').then(r => r.json())
+        fetch(`${API_BASE_URL}/api/status`).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/policies`).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/audit-logs`).then(r => r.json())
       ]);
       setStatus(resStatus);
       setPolicies(resPolicies);
@@ -154,7 +155,7 @@ export default function App() {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/voice-agent', {
+      const response = await fetch(`${API_BASE_URL}/api/voice-agent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,7 +175,7 @@ export default function App() {
     } catch (err) {
       console.error('Agent execution error:', err);
       setLatestResult({
-        spokenText: `Network error connecting to backend on port 5000: ${err.message}`,
+        spokenText: `Network error connecting to backend: ${err.message}`,
         verdict: 'BLOCKED',
         blockDetails: { matchedRule: 'NETWORK_ERROR', reason: err.message }
       });
@@ -186,7 +187,7 @@ export default function App() {
   // Update Credentials
   const handleUpdateKeys = async (keys) => {
     try {
-      await fetch('http://localhost:5000/api/update-keys', {
+      await fetch(`${API_BASE_URL}/api/update-keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(keys)

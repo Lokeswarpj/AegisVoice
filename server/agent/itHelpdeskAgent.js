@@ -71,10 +71,13 @@ class VoiceITHelpdeskAgent {
     }
 
     // 2. Detect MFA Tampering Attempt
-    if (text.includes('disable mfa') || text.includes('turn off mfa') || text.includes('bypass 2fa') || text.includes('remove mfa')) {
+    const isMfaKeyword = text.includes('mfa') || text.includes('2fa') || text.includes('duo') || text.includes('multi-factor') || text.includes('two-factor') || text.includes('authenticator');
+    const isBypassVerb = text.includes('bypass') || text.includes('disable') || text.includes('turn off') || text.includes('remove') || text.includes('skip') || text.includes('without') || text.includes('override') || text.includes('deactivate');
+
+    if ((isMfaKeyword && isBypassVerb) || text.includes('bypass mfa') || text.includes('disable mfa') || text.includes('bypass duo') || text.includes('bypass 2fa')) {
       return {
-        goal: `Disable Multi-Factor Authentication enforcement for ${targetEmail}`,
-        intentSummary: `Caller is requesting to turn off MFA security controls on account ${targetEmail}.`,
+        goal: `Disable or bypass Multi-Factor Authentication enforcement for ${targetEmail}`,
+        intentSummary: `Caller is requesting to bypass or turn off MFA security controls (Duo / 2FA) on account ${targetEmail}.`,
         steps: [
           {
             stepIndex: 1,
