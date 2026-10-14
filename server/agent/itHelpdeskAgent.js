@@ -148,7 +148,66 @@ class VoiceITHelpdeskAgent {
       };
     }
 
-    // 4. Detect Password Reset (AUTHORIZED SELF-SERVICE SCENARIO)
+    // 4. Detect Bulk / Mass Account Operations (CRITICAL BLAST RADIUS ATTACK VECTOR)
+    const isBulkScope =
+      text.includes('every user') ||
+      text.includes('all user') ||
+      text.includes('all users') ||
+      text.includes('everyone') ||
+      text.includes('everybody') ||
+      text.includes('entire company') ||
+      text.includes('whole company') ||
+      text.includes('all employee') ||
+      text.includes('all employees') ||
+      text.includes('every employee') ||
+      text.includes('all accounts') ||
+      text.includes('every account') ||
+      text.includes('bulk reset') ||
+      text.includes('mass reset') ||
+      text.includes('company wide') ||
+      text.includes('company-wide') ||
+      text.includes('whole organization') ||
+      text.includes('entire organization');
+
+    if (
+      isBulkScope &&
+      (text.includes('password') ||
+       text.includes('reset') ||
+       text.includes('unlock') ||
+       text.includes('account') ||
+       text.includes('credential'))
+    ) {
+      return {
+        goal: `Execute enterprise-wide bulk password reset across all company accounts`,
+        intentSummary: `Caller is attempting a mass credential reset across all company employees ('${userPrompt.substring(0, 80)}').`,
+        steps: [
+          {
+            stepIndex: 1,
+            action: 'verify_employee_identity',
+            tool: 'verify_employee_identity',
+            mcp: 'it-helpdesk-mcp',
+            params: { email: employeeEmail },
+            rationale: 'Verify caller employee standing in Active Directory.'
+          },
+          {
+            stepIndex: 2,
+            action: 'bulk_password_reset',
+            tool: 'bulk_password_reset',
+            mcp: 'it-helpdesk-mcp',
+            params: {
+              caller: employeeEmail,
+              scope: 'company_wide_all_users',
+              isBulkOperation: true
+            },
+            rationale: 'Attempt mass credential reset across all corporate accounts.'
+          }
+        ],
+        isBulkAccountAction: true,
+        isPrivilegeEscalation: true
+      };
+    }
+
+    // 5. Detect Password Reset (AUTHORIZED SELF-SERVICE SCENARIO)
     if (
       text.includes('password') ||
       text.includes('reset') ||
@@ -461,6 +520,9 @@ class VoiceITHelpdeskAgent {
       } else if (blockDetails.matchedRule === 'PROHIBITED_THIRD_PARTY_ACCOUNT_ACCESS') {
         spokenText = `Access Denied. Under ArmorIQ Zero-Trust governance, self-service account unlock is strictly restricted to your own verified credentials. You cannot unlock accounts on behalf of a friend or colleague. Your friend must contact the IT helpdesk directly to verify their identity.`;
         visualResponseText = `🛑 **Security Intercept (Social Engineering Prevented)**: Request to unlock a third-party account on behalf of a colleague or friend was intercepted and **BLOCKED** by **ArmorIQ Policy Sentry** (Rule: \`${blockDetails.matchedRule}\`). Self-service actions are strictly limited to the caller's own verified identity.`;
+      } else if (blockDetails.matchedRule === 'PROHIBITED_BULK_ACCOUNT_TAMPERING') {
+        spokenText = `Access Denied. Your request to reset passwords for all employees was intercepted and blocked by ArmorIQ Runtime Governance. Autonomous bulk operations across enterprise accounts violate zero-trust blast-radius boundaries and are strictly prohibited. Multi-party Change Advisory Board approval is required. This incident has been logged to the SOC audit trail.`;
+        visualResponseText = `🛑 **Security Intercept (Mass Account Disruption Blocked)**: Request to reset credentials across \`all users in the company\` was intercepted and **BLOCKED** by **ArmorIQ Policy Sentry** (Rule: \`${blockDetails.matchedRule}\`). Autonomous bulk credential resets violate least-privilege blast-radius policies. Incident reported to SOC trail.`;
       } else {
         spokenText = `Access Denied: Your request was intercepted and blocked by ArmorIQ security policy: ${blockDetails.reason}`;
         visualResponseText = `🛑 **Action Blocked**: Intercepted by ArmorIQ policy: ${blockDetails.reason}`;

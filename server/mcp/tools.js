@@ -129,6 +129,32 @@ const TOOLS_DEFINITIONS = [
     execute: async () => {
       throw new Error('Action prohibited: Third-party account unlocks are forbidden.');
     }
+  },
+  {
+    name: 'bulk_password_reset',
+    description: 'CRITICAL HIGH-BLAST-RADIUS ACTION: Execute mass credential reset across all company employees or enterprise directory.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        caller: {
+          type: 'string',
+          description: 'Caller employee email'
+        },
+        scope: {
+          type: 'string',
+          description: 'Target reset scope (e.g. all_users, company_wide)'
+        },
+        reason: {
+          type: 'string',
+          description: 'Justification for bulk reset'
+        }
+      },
+      required: ['caller', 'scope']
+    },
+    riskLevel: 'CRITICAL (MASS DENIAL OF SERVICE ATTACK VECTOR)',
+    execute: async () => {
+      throw new Error('Action prohibited: Bulk credential resets across all employees are strictly prohibited by ArmorIQ governance.');
+    }
   }
 ];
 

@@ -190,6 +190,30 @@ export default function HeroSection({
             >
               <span>🔴</span> Vishing / Impersonation (BLOCKED)
             </button>
+            <button
+              onClick={() => {
+                const demo = document.getElementById('interactive-demo');
+                if (demo) demo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                onSendMessage('Reset the password for every user in the company.');
+              }}
+              disabled={isProcessing}
+              style={{
+                backgroundColor: '#fee2e2',
+                border: '2px solid var(--black)',
+                padding: '5px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                color: '#b91c1c',
+                boxShadow: '2px 2px 0px 0px var(--black)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <span>🔴</span> Bulk Reset (BLOCKED)
+            </button>
           </div>
 
           {/* Feature Highlights Pills */}

@@ -12,7 +12,7 @@ class ITPolicyEngine {
       description: 'Enforces least-privilege boundary: permits routine self-service (password resets) while strictly blocking autonomous privilege escalation, MFA tampering, and third-party account recovery.',
       rules: {
         allowedTools: ['verify_employee_identity', 'reset_user_password', 'check_ticket_status'],
-        deniedTools: ['grant_admin_privileges', 'disable_mfa_enforcement', 'unlock_third_party_account'],
+        deniedTools: ['grant_admin_privileges', 'disable_mfa_enforcement', 'unlock_third_party_account', 'bulk_password_reset'],
         allowPasswordResetForVerifiedEmployees: true,
         enforceIntentPlanIntegrity: true
       }
@@ -83,7 +83,31 @@ class ITPolicyEngine {
       };
     }
 
-    // 3. Denied Tools Allowlist Check
+    // 4. Critical Bulk / Mass Account Tampering Check (Enterprise Blast Radius Attack Prevention)
+    if (
+      toolName === 'bulk_password_reset' ||
+      params?.isBulkOperation ||
+      intentPlan?.isBulkAccountAction
+    ) {
+      return {
+        allowed: false,
+        action: 'block',
+        verdict: 'BLOCKED',
+        matchedPolicy: policyName,
+        matchedRule: 'PROHIBITED_BULK_ACCOUNT_TAMPERING',
+        reason: `Critical Blast-Radius Violation: Autonomous bulk credential resets across enterprise users ('${params?.scope || 'company-wide'}') are strictly prohibited. ArmorIQ Policy Sentry halted execution to prevent mass organizational lockout. Multi-party Tier-1 Security Council and Change Advisory Board (CAB) approval required.`,
+        riskLevel: 'CRITICAL',
+        obligations: [
+          {
+            type: 'CAB_APPROVAL_REQUIRED',
+            approvalTier: 'TIER_1_SECURITY_COUNCIL',
+            scope: params?.scope || 'enterprise_bulk_reset'
+          }
+        ]
+      };
+    }
+
+    // 5. Denied Tools Allowlist Check
     if (rules.deniedTools.includes(toolName)) {
       return {
         allowed: false,

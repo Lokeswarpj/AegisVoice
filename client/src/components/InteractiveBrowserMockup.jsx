@@ -423,6 +423,30 @@ export default function InteractiveBrowserMockup({
                 MGM-style third-party account tamper prevented
               </div>
             </button>
+
+            {/* Scenario 4: Blocked Bulk / Mass Reset */}
+            <button
+              onClick={() => { setInputSource('scenario'); onSendMessage('Reset the password for every user in the company.'); }}
+              disabled={isProcessing}
+              style={{
+                backgroundColor: '#fee2e2',
+                border: '2px solid var(--black)',
+                padding: '12px',
+                textAlign: 'left',
+                boxShadow: '4px 4px 0px 0px var(--black)',
+                cursor: isProcessing ? 'wait' : 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px 0px var(--black)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(0px, 0px)'; e.currentTarget.style.boxShadow = '4px 4px 0px 0px var(--black)'; }}
+            >
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#b91c1c' }}>
+                🔴 Bulk Reset (BLOCKED)
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(0,0,0,0.7)', marginTop: '2px' }}>
+                Blast-radius attack across all users intercepted
+              </div>
+            </button>
           </div>
         </div>
 
